@@ -9,22 +9,23 @@
 #include "../include/Stress.h"
 #include "../include/GUI.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#pragma comment(lib, "opengl32.lib")
-#endif
+    #ifdef _WIN32
+    #define NOMINMAX
+    #include <windows.h>
+    #undef min
+    #undef max
+    #pragma comment(lib, "opengl32.lib")
+    #endif
 
 int main() {
     #ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
     #endif
 
-    std::cout << "=== Програма МСЕ (Паралелепіпед) ===\n\n";
-
-    // Ініціалізація Viewer (вікно OpenGL)
+    // Ініціалізація Viewer
     Viewer viewer;
-    if (!viewer.init(1280, 800, "МСЕ - Аналіз напружено-деформованого стану")) {
-        std::cerr << "Помилка створення вікна!\n";
+    if (!viewer.init(1280, 800, "MCE - Analiz napruzeno-deformovanogo stanu")) {
+        std::cerr << "Pomylka stvorennia vikna!\n";
         return 1;
     }
 
@@ -32,7 +33,7 @@ int main() {
     GUI gui;
     GLFWwindow* window = glfwGetCurrentContext();
     if (!gui.init(window)) {
-        std::cerr << "Помилка ініціалізації GUI!\n";
+        std::cerr << "Pomylka inicializacii GUI!\n";
         return 1;
     }
 
@@ -52,9 +53,23 @@ int main() {
         if (state.mesh && state.meshGenerated) {
             viewer.renderMesh(*state.mesh);
             
-            // Малюємо деформовану форму, якщо є переміщення
-            if (state.femComputed && state.assembly) {
+            // Малюємо деформовану форму, якщо showDeformed
+            if (state.showDeformed && state.femComputed && state.assembly) {
+                // Автоматичний масштаб: щоб макс. переміщення було ~10% від розміру моделі
+                double maxDisp = 0;
+                for (int i = 0; i < state.mesh->nqp; ++i) {
+                    double mag = state.assembly->getDisplacement(i).norm();
+                    if (mag > maxDisp) maxDisp = mag;
+                }
+                if (maxDisp > 1e-30) {
+                    double maxDim = std::max({state.mesh->a, state.mesh->b, state.mesh->c});
+                    viewer.setDeformationScale(maxDim * 0.15 / maxDisp);
+                }
                 viewer.renderDeformed(*state.mesh, state.assembly->U);
+            }
+            
+            // Малюємо кольорову карту напружень
+            if (state.femComputed && state.vonMises) {
                 viewer.renderStresses(*state.mesh, *state.vonMises);
             }
         }

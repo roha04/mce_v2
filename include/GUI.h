@@ -17,6 +17,7 @@ struct AppState {
     // Стан програми
     bool meshGenerated = false;
     bool femComputed = false;
+    bool showDeformed = false;
     double progress = 0.0;
     int currentStep = 0;
     std::string statusMsg = "Готовий до роботи";

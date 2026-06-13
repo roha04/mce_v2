@@ -500,25 +500,47 @@ void GUI::renderStressPanel(AppState& state) {
 
 void GUI::renderControlsPanel(AppState& state) {
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - 250, 20));
-    ImGui::SetNextWindowSize(ImVec2(250, 180));
-    ImGui::Begin("Управління 3D", nullptr, 
+    ImGui::SetNextWindowSize(ImVec2(250, 200));
+    ImGui::Begin("Upravlinnia 3D", nullptr, 
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
-    ImGui::Text("Відображення:");
-    ImGui::Checkbox("Вузли [N]", &state.meshGenerated); // dummy - handled by viewer
-    ImGui::Checkbox("Елементи [E]", &state.meshGenerated);
-    ImGui::Checkbox("Деформація [D]", &state.femComputed);
+    ImGui::Text("Vidobrazhennia:");
+    bool showN = true, showE = true;
+    ImGui::Checkbox("Vuzly", &showN);
+    ImGui::SameLine();
+    ImGui::Checkbox("Elementy", &showE);
     
     ImGui::Separator();
-    ImGui::Text("Масштаб деформації:");
-    static float defScale = 0.01f;
-    if (ImGui::SliderFloat("##scale", &defScale, 0.0001f, 10.0f, "%.4f")) {
-        // Viewer отримає це через callback
+    
+    // Кнопка деформації
+    if (state.femComputed) {
+        if (state.showDeformed) {
+            if (ImGui::Button("   DEFORMACIIA: ON   ", ImVec2(-1, 30))) {
+                state.showDeformed = false;
+            }
+        } else {
+            if (ImGui::Button("   DEFORMACIIA: OFF   ", ImVec2(-1, 30))) {
+                state.showDeformed = true;
+            }
+        }
+        ImGui::Text("Naty snit D na klaviaturi");
     }
     
     ImGui::Separator();
-    if (ImGui::Button("Скинути камеру [R]", ImVec2(-1, 25))) {
-        // Viewer отримає через ключ R
+    
+    // Інформація
+    if (state.meshGenerated) {
+        ImGui::Text("Vuzliv: %d", state.mesh->nqp);
+        ImGui::Text("Elementiv: %d", state.mesh->nel);
+    }
+    
+    if (state.femComputed && state.assembly) {
+        double maxDisp = 0;
+        for (int i = 0; i < state.mesh->nqp; ++i) {
+            double mag = state.assembly->getDisplacement(i).norm();
+            if (mag > maxDisp) maxDisp = mag;
+        }
+        ImGui::Text("Max peremischennia: %.4e", maxDisp);
     }
 
     ImGui::End();

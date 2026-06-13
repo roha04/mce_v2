@@ -59,6 +59,11 @@ public:
     void renderElements(const Mesh& mesh);
     void renderDeformed(const Mesh& mesh, const std::vector<double>& displacements);
     void renderStresses(const Mesh& mesh, const std::vector<double>& stresses);
+    
+    // Додаткові функції візуалізації
+    void renderLoadArrows(const Mesh& mesh, double pressure);
+    void renderNodeLabels(const Mesh& mesh);
+    void renderLoadInfo(const Mesh& mesh, double pressure);
 
 private:
     // Обробка вводу
